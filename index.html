@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#FBF3E6">
+<title>致清清 · 生日快乐</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    touch-action: manipulation;
+  }
+  body {
+    font-family: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", "SimSun", "PingFang SC", serif;
+    color: #6B4F3A;
+    background: #FBF3E6;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* ============ 背景 ============ */
+  .bg {
+    position: fixed; inset: 0; z-index: -3;
+    background:
+      radial-gradient(900px 700px at 15% 8%, rgba(255,252,246,.95), rgba(255,252,246,0) 65%),
+      radial-gradient(900px 700px at 88% 92%, rgba(247,222,187,.85), rgba(247,222,187,0) 62%),
+      linear-gradient(158deg, #FDF7EE 0%, #F9E9D4 48%, #F3DFC2 100%);
+  }
+  .bg::after {
+    content: ""; position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(178,144,100,.13) 1px, transparent 1.2px);
+    background-size: 4px 4px;
+    opacity: .5;
+  }
+
+  /* ============ 花瓣 ============ */
+  #petals { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
+  .petal-wrap {
+    position: absolute; top: 0;
+    animation: fallDown linear infinite;
+    will-change: transform;
+  }
+  @keyframes fallDown {
+    0%   { transform: translateY(-14vh) rotate(0deg); }
+    100% { transform: translateY(114vh) rotate(360deg); }
+  }
+  .petal {
+    display: block; width: 100%; height: 100%;
+    border-radius: 62% 8% 62% 8%;
+    background: linear-gradient(135deg, rgba(255,213,220,.95), rgba(255,236,214,.72));
+    box-shadow: 0 0 8px rgba(255,198,198,.35);
+    animation: sway ease-in-out infinite alternate;
+    will-change: transform;
+  }
+  @keyframes sway {
+    0%   { transform: translateX(-16px) rotate(-30deg) scale(1); }
+    100% { transform: translateX(16px) rotate(34deg) scale(.82); }
+  }
+
+  /* ============ 舞台 ============ */
+  #stage { position: fixed; inset: 0; z-index: 2; }
+
+  .page {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 3.5vh 6vw;
+    opacity: 0; visibility: hidden;
+    transform: translateY(16px);
+    transition: opacity .9s cubic-bezier(.22,.61,.36,1),
+                transform .9s cubic-bezier(.22,.61,.36,1),
+                visibility .9s;
+    pointer-events: none;
+  }
+  .page.active {
+    opacity: 1; visibility: visible; transform: none;
+    pointer-events: auto;
+  }
+
+  /* ============ 封面 ============ */
+  .cover-inner {
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center; padding: 0 4vw;
+  }
+  .cover-orn {
+    font-size: 1.05rem; color: #DCB878; letter-spacing: .4em;
+    text-indent: .4em; margin-bottom: 20px;
+    opacity: 0;
+  }
+  .cover-title {
+    font-size: clamp(1.7rem, 8vw, 2.15rem);
+    font-weight: 600; letter-spacing: .16em; text-indent: .16em;
+    color: #7A5B3E;
+    opacity: 0;
+  }
+  .cover-rule {
+    width: 0; height: 1px; margin: 22px 0 24px;
+    background: linear-gradient(90deg, transparent, #E2BD83, transparent);
+  }
+  .cover-sub {
+    font-size: .84rem; line-height: 2.05; letter-spacing: .1em;
+    color: #97795B;
+    opacity: 0;
+  }
+  .start-btn {
+    margin-top: 42px;
+    padding: 13px 42px;
+    font-family: inherit; font-size: .86rem;
+    letter-spacing: .3em; text-indent: .3em;
+    color: #7A5B3E;
+    background: linear-gradient(160deg, #FFFDF8, #F7E6CC);
+    border: 1px solid rgba(214,178,124,.75);
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 12px 28px -14px rgba(160,120,64,.85),
+                inset 0 1px 0 rgba(255,255,255,.95);
+    opacity: 0;
+    transition: transform .25s ease, box-shadow .25s ease;
+  }
+  .start-btn:active {
+    transform: scale(.96);
+    box-shadow: 0 6px 16px -10px rgba(160,120,64,.85),
+                inset 0 1px 0 rgba(255,255,255,.95);
+  }
+
+  /* 封面动画只在 .active 时触发，方便“回到首页”重播 */
+  .page-cover.active .cover-orn      { animation: riseIn 1s ease .15s forwards; }
+  .page-cover.active .cover-title    { animation: riseIn 1.1s ease .45s forwards; }
+  .page-cover.active .cover-rule     { animation: growLine 1.4s ease .85s forwards; }
+  .page-cover.active .cover-sub:nth-of-type(1) { animation: riseIn 1s ease 1.1s forwards; }
+  .page-cover.active .cover-sub:nth-of-type(2) { animation: riseIn 1s ease 1.4s forwards; }
+  .page-cover.active .start-btn      { animation: riseIn 1s ease 1.85s forwards; }
+
+  @keyframes growLine { to { width: 158px; } }
+  @keyframes riseIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* ============ 照片卡片 ============ */
+  .card {
+    width: min(400px, 86vw);
+    max-height: 86vh;
+    display: flex; flex-direction: column;
+    padding: 16px 16px 22px;
+    background: linear-gradient(170deg, rgba(255,253,248,.92), rgba(253,244,231,.84));
+    border: 1px solid rgba(210,178,136,.42);
+    border-radius: 20px;
+    box-shadow:
+      0 22px 48px -18px rgba(150,112,66,.42),
+      0 2px 6px rgba(150,112,66,.06),
+      inset 0 1px 0 rgba(255,255,255,.9);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    opacity: 0;
+  }
+  .page.active .card {
+    animation: cardIn .95s cubic-bezier(.22,.61,.36,1) .12s both;
+  }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(22px) scale(.985); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .photo-frame {
+    flex: 1 1 auto;
+    min-height: 168px;
+    display: flex;
+    padding: 9px;
+    background: #FFFDF9;
+    border: 1px solid rgba(228,206,176,.7);
+    border-radius: 12px;
+    box-shadow: 0 10px 26px -14px rgba(140,105,62,.65),
+                inset 0 1px 0 rgba(255,255,255,.9);
+  }
+  .photo-inner {
+    position: relative;
+    flex: 1; min-height: 0;
+    border-radius: 7px;
+    overflow: hidden;
+    background: linear-gradient(140deg, #F6E7D2, #EFD7B6);
+  }
+  .photo-inner img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    z-index: 2;
+  }
+  .photo-holder {
+    position: absolute; inset: 0;
+    z-index: 1;
+    display: flex; align-items: center; justify-content: center;
+    padding: 14px;
+    font-size: .74rem; line-height: 1.9;
+    letter-spacing: .16em;
+    color: rgba(150,118,82,.72);
+    text-align: center;
+    background-image: repeating-linear-gradient(45deg,
+      rgba(255,255,255,.4) 0 8px, rgba(255,255,255,0) 8px 16px);
+  }
+
+  .text-area {
+    flex: 0 0 auto;
+    padding: 16px 6px 0;
+    text-align: center;
+  }
+  .p-title {
+    display: inline-block;
+    font-size: 1.02rem;
+    font-weight: 600;
+    letter-spacing: .22em;
+    text-indent: .22em;
+    color: #7A5B3E;
+  }
+  .p-title::after {
+    content: "";
+    display: block;
+    width: 34px; height: 2px;
+    margin: 9px auto 0;
+    border-radius: 2px;
+    background: linear-gradient(90deg, rgba(242,200,121,0), #E8B96A, rgba(242,200,121,0));
+  }
+
+  .lines { text-align: center; margin-top: 10px; }
+  .line {
+    font-size: .875rem;
+    line-height: 1.95;
+    letter-spacing: .075em;
+    color: #8A6C51;
+    opacity: 0;
+    animation: lineIn .8s ease forwards;
+  }
+  @keyframes lineIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: none; }
+  }
+  .line.typing::after {
+    content: "";
+    display: inline-block;
+    width: 2px; height: .92em;
+    vertical-align: -.1em;
+    margin-left: 3px;
+    background: #D9AE6A;
+    animation: blink 1s steps(1) infinite;
+  }
+  @keyframes blink { 0%,49% { opacity: 1; } 50%,100% { opacity: 0; } }
+
+  /* ============ 结尾页 ============ */
+  .end-inner {
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center;
+    padding: 0 6vw;
+    max-width: 440px;
+    max-height: 94vh;
+  }
+
+  .end-photo-wrap {
+    margin-bottom: 12px;
+    opacity: 0;
+    animation: riseIn .9s ease .15s forwards;
+  }
+  .end-photo-ring {
+    position: relative;
+    width: min(104px, 24vw, 13vh);
+    height: min(104px, 24vw, 13vh);
+    padding: 5px;
+    border-radius: 50%;
+    background: linear-gradient(140deg, #F7DFB5, #E8BE7E 45%, #F7DFB5);
+    box-shadow:
+      0 12px 30px -14px rgba(160,120,64,.75),
+      inset 0 1px 0 rgba(255,255,255,.85);
+  }
+  .end-photo-ring::after {
+    content: "";
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid rgba(224, 186, 128, .55);
+    animation: ringPulse 3.2s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes ringPulse {
+    0%, 100% { transform: scale(1); opacity: .5; }
+    50%      { transform: scale(1.07); opacity: .95; }
+  }
+  .end-photo-ring img {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    background: linear-gradient(140deg, #F6E7D2, #EFD7B6);
+  }
+
+  .end-big {
+    font-size: clamp(1.5rem, 7.6vw, 2rem);
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-indent: .14em;
+    color: #B77E3E;
+    margin: 4px 0 2px;
+    opacity: 0;
+    text-shadow:
+      0 1px 0 rgba(255,255,255,.7),
+      0 4px 16px rgba(220,175,105,.35);
+    animation:
+      riseIn 1s ease .5s forwards,
+      bigBreath 4.6s ease-in-out 1.6s infinite;
+  }
+  @keyframes bigBreath {
+    0%, 100% {
+      text-shadow: 0 1px 0 rgba(255,255,255,.7),
+                   0 4px 16px rgba(220,175,105,.32);
+    }
+    50% {
+      text-shadow: 0 1px 0 rgba(255,255,255,.85),
+                   0 4px 26px rgba(220,175,105,.7);
+    }
+  }
+
+  .end-rule {
+    width: 92px; height: 1px;
+    margin: 12px 0 4px;
+    background: linear-gradient(90deg, transparent, #DDB77E, transparent);
+    opacity: 0;
+    transform: scaleX(.2);
+    animation: growLine2 1s ease .8s forwards;
+  }
+  @keyframes growLine2 {
+    to { opacity: 1; transform: scaleX(1); }
+  }
+
+  .end-inner .lines { margin-top: 10px; }
+  .end-inner .line { font-size: .82rem; line-height: 1.98; }
+
+  /* “回到首页”按钮 */
+  .restart-btn {
+    margin-top: 20px;
+    padding: 11px 34px;
+    font-family: inherit;
+    font-size: .8rem;
+    letter-spacing: .26em;
+    text-indent: .26em;
+    color: #7A5B3E;
+    background: linear-gradient(160deg, #FFFDF8, #F7E6CC);
+    border: 1px solid rgba(214,178,124,.75);
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 10px 24px -14px rgba(160,120,64,.85),
+                inset 0 1px 0 rgba(255,255,255,.95);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px);
+    transition: opacity .8s ease, transform .8s ease, visibility .8s;
+    pointer-events: none;
+  }
+  .restart-btn.show {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    pointer-events: auto;
+  }
+  .restart-btn:active {
+    transform: scale(.96);
+  }
+
+  /* ============ 提示 ============ */
+  .hint {
+    position: absolute;
+    bottom: 3vh; left: 50%;
+    transform: translateX(-50%);
+    font-size: .67rem;
+    letter-spacing: .32em;
+    text-indent: .32em;
+    white-space: nowrap;
+    color: #96795B;
+    opacity: 0;
+    transition: opacity .9s ease;
+    pointer-events: none;
+  }
+  .hint.show {
+    opacity: .72;
+    animation: hintPulse 2.6s ease-in-out infinite;
+  }
+  @keyframes hintPulse {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50%      { transform: translateX(-50%) translateY(-4px); }
+  }
+
+  /* ============ 音乐按钮 ============ */
+  #musicToggle {
+    position: fixed;
+    top: max(16px, env(safe-area-inset-top));
+    right: 16px;
+    z-index: 10;
+    width: 38px; height: 38px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    border: 1px solid rgba(214,178,124,.6);
+    background: rgba(255,253,248,.75);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    color: #A58560;
+    font-size: 15px;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .5s ease, color .3s ease;
+  }
+  #musicToggle.visible { opacity: 1; pointer-events: auto; }
+  #musicToggle.off { color: #CDB99F; }
+  #musicToggle .on-note { display: block; animation: noteBeat 1.6s ease-in-out infinite; }
+  #musicToggle.off .on-note { display: none; }
+  #musicToggle .off-note { display: none; }
+  #musicToggle.off .off-note { display: block; }
+  @keyframes noteBeat {
+    0%,100% { transform: translateY(0) scale(1); }
+    50%     { transform: translateY(-2px) scale(1.08); }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<div id="petals"></div>
+<div id="stage"></div>
+
+<button id="musicToggle" type="button" aria-label="背景音乐开关">
+  <span class="on-note">♪</span>
+  <span class="off-note">♪</span>
+</button>
+
+<script>
+(function () {
+  "use strict";
+
+  /* =========================================================
+     1. 内容配置 —— 15 张照片 + 结尾第 16 张
+     照片路径：photos/01.jpg ~ photos/16.jpg
+     ========================================================= */
+  var pages = [
+    /* 0 封面 */
+    { type: "cover" },
+
+    /* 1 */
+    { img: "photos/01.jpg", alt: "第 1 张 · 婴儿 / 百天照", title: "清清，你来了",
+      lines: [
+        "你初来人间，像一颗小星星。",
+        "从那天起，家里有了笑声，世界多了一盏灯。"
+      ] },
+
+    /* 2 */
+    { img: "photos/02.jpg", alt: "第 2 张 · 幼儿 / 童年照", title: "小小脚步",
+      lines: [
+        "你学会奔跑，也学会撒娇。",
+        "摔过跤，哭过鼻子，还是把童年过得热热闹闹。"
+      ] },
+
+    /* 3 */
+    { img: "photos/03.jpg", alt: "第 3 张 · 小学 / 少女照", title: "慢慢长大",
+      lines: [
+        "你背起书包，也背起小小的梦想。",
+        "有过倔强，有过迷茫，却一直善良。"
+      ] },
+
+    /* 4 家人 */
+    { img: "photos/04.jpg", alt: "第 4 张 · 全家福 / 爸妈和滨滨", title: "家的光",
+      lines: [
+        "谢谢爸妈，把岁月熬成温柔的光，",
+        "把你和滨滨，一步一步护着成长。",
+        "一个家，两份牵挂，",
+        "妹妹是童年玩伴，也是长大后的靠山呀。",
+        "前半生，他们护你长大；",
+        "后半生，你陪他们把平凡日子开出花。"
+      ] },
+
+    /* 5 珠海 */
+    { img: "photos/05.jpg", alt: "第 5 张 · 珠海 · 大学", title: "珠海的风",
+      lines: [
+        "珠海的风，吹过你的大学时光。",
+        "你第一次离家，也第一次独自成长。",
+        "海很宽，路很长，",
+        "你把青春走成了自己的模样。"
+      ] },
+
+    /* 6 悉尼 */
+    { img: "photos/06.jpg", alt: "第 6 张 · 悉尼 · 硕士", title: "悉尼的夜",
+      lines: [
+        "悉尼的夜，亮着异乡的灯火。",
+        "你一个人上课、回家，熬过想家的时刻。",
+        "可你也看过更远的海、更大的世界，",
+        "那些吃过的苦，后来都成了你的底色。"
+      ] },
+
+    /* 7 一个人 */
+    { img: "photos/07.jpg", alt: "第 7 张 · 悉尼 · 一个人生活", title: "一个人，也走了很远",
+      lines: [
+        "一个人搬过家，一个人等过车，",
+        "一个人把委屈咽下，也把风景看过。",
+        "你不是天生坚强，",
+        "只是走着走着，就长出了翅膀。"
+      ] },
+
+    /* 8 看世界 */
+    { img: "photos/08.jpg", alt: "第 8 张 · 旅行 / 看海 / 山野", title: "去看世界",
+      lines: [
+        "你去过海边，也吹过山风。",
+        "把笑声留在照片里，把故事装进心中。",
+        "世界很大，你一步一步，",
+        "走成了自己的光。"
+      ] },
+
+    /* 9 朋友 */
+    { img: "photos/09.jpg", alt: "第 9 张 · 和朋友合照", title: "朋友与风",
+      lines: [
+        "朋友在左，快乐在右，",
+        "你们把青春走成一场热闹的远游。",
+        "多年以后再看，仍会笑着泪流。"
+      ] },
+
+    /* 10 科创 */
+    { img: "photos/10.jpg", alt: "第 10 张 · 科创集团 · 那一年", title: "科创一年",
+      lines: [
+        "工作第一年，你忙过也拼过。",
+        "新环境、新节奏，你一点点扛过。",
+        "没有白走的路，每一步都算数。"
+      ] },
+
+    /* 11 道滘 */
+    { img: "photos/11.jpg", alt: "第 11 张 · 道滘基层 · 那一年", title: "工作时候",
+      lines: [
+        "在镇街那一年，你见过人间烟火。",
+        "跑过现场，做过琐事，也更懂生活。",
+        "累过，也成长过，",
+        "那些经历，都悄悄把你变得更稳妥。"
+      ] },
+
+    /* 12 发改局 */
+    { img: "photos/12.jpg", alt: "第 12 张 · 发改局 · 现在的你", title: "现在的你",
+      lines: [
+        "现在的你，在发改局忙得像风不停歇。",
+        "很累，但每一步都算数，每一页都算收获。",
+        "那些疲惫和挫折，不必再反复回望。",
+        "它们没有定义你，只让你更坚强。"
+      ] },
+
+    /* 13 我们 */
+    { img: "photos/13.jpg", alt: "第 13 张 · 我们的第一张合照", title: "人海相逢",
+      lines: [
+        "你见过世界，也吃过苦，",
+        "所以更懂温柔，更懂珍惜幸福。",
+        "后来人海茫茫，我们遇见。",
+        "不是轰轰烈烈，只是刚好你在，我也出现。"
+      ] },
+
+    /* 14 日常 */
+    { img: "photos/14.jpg", alt: "第 14 张 · 我们的日常", title: "平常日子",
+      lines: [
+        "我们一起吃饭、散步、拍照、发呆，",
+        "把普通的日子，过得有点可爱。",
+        "从今往后，清晨和黄昏，",
+        "我们都一起走一程。",
+        "你不必再一个人扛，",
+        "我在，一直在，做你的同行人。"
+      ] },
+
+    /* 15 未来 */
+    { img: "photos/15.jpg", alt: "第 15 张 · 近期合照 / 牵手背影", title: "二十九岁，下一页是我们",
+      lines: [
+        "29 岁，不是告别青春，",
+        "是把故事写得更认真。",
+        "珠海的风、悉尼的夜、脚下的路、发改局的灯，",
+        "都成了你身上的光。",
+        "过去有人爱你，现在他们还在，",
+        "未来我们并肩，慢慢走。"
+      ] },
+
+    /* 16 结尾 */
+    { type: "end",
+      img: "photos/16.jpg",
+      bigTitle: "清澜，生日快乐！",
+      lines: [
+        "愿你有往事可怀念，",
+        "感恩家人和自己，",
+        "有朋友可想念，",
+        "有此刻可珍惜，",
+        "有未来可奔赴，",
+        "也有我，陪你走接下来的每一步。",
+        "",
+        "生日快乐。",
+        "从这一岁开始，我们并肩，慢慢走。"
+      ] }
+  ];
+
+  /* =========================================================
+     2. 花瓣 —— 数量更多，更浪漫
+     ========================================================= */
+  (function createPetals() {
+    var layer = document.getElementById("petals");
+    var COUNT = window.innerWidth < 480 ? 46 : 62;
+
+    for (var i = 0; i < COUNT; i++) {
+      var wrap = document.createElement("div");
+      wrap.className = "petal-wrap";
+
+      var size = 6 + Math.random() * 12;
+      var dur = 11 + Math.random() * 18;
+      var delay = -Math.random() * dur;
+
+      wrap.style.left = (Math.random() * 100) + "vw";
+      wrap.style.width = size + "px";
+      wrap.style.height = size + "px";
+      wrap.style.animationDuration = dur + "s";
+      wrap.style.animationDelay = delay + "s";
+      wrap.style.opacity = (0.42 + Math.random() * 0.5).toFixed(2);
+
+      var petal = document.createElement("span");
+      petal.className = "petal";
+      petal.style.animationDuration = (3.0 + Math.random() * 4.5).toFixed(2) + "s";
+      petal.style.animationDelay = (-Math.random() * 7).toFixed(2) + "s";
+
+      var r = Math.random();
+      if (r < 0.36) {
+        petal.style.background = "linear-gradient(135deg, rgba(255,204,214,.95), rgba(255,236,214,.7))";
+      } else if (r < 0.7) {
+        petal.style.background = "linear-gradient(135deg, rgba(255,228,206,.95), rgba(252,238,216,.7))";
+      } else {
+        petal.style.background = "linear-gradient(135deg, rgba(255,240,205,.92), rgba(255,226,196,.68))";
+      }
+
+      wrap.appendChild(petal);
+      layer.appendChild(wrap);
+    }
+  })();
+
+  /* =========================================================
+     3. 构建页面
+     ========================================================= */
+  var stage = document.getElementById("stage");
+  var pageEls = [];
+  var currentIndex = 0;
+  var waitingForTap = true;
+  var started = false;
+  var startDelayTimer = null;
+
+  function buildPage(p) {
+    var page = document.createElement("section");
+    page.className = "page";
+
+    if (p.type === "cover") {
+      page.classList.add("page-cover");
+      page.innerHTML =
+        '<div class="cover-inner">' +
+          '<div class="cover-orn">❦</div>' +
+          '<h1 class="cover-title">致亲爱的清清</h1>' +
+          '<div class="cover-rule"></div>' +
+          '<p class="cover-sub">那个善良、爱笑又认真的女孩。</p>' +
+          '<p class="cover-sub">今天，我想陪你把走过的路，慢慢看一遍。</p>' +
+          '<button class="start-btn" type="button">翻开时光</button>' +
+        '</div>';
+
+    } else if (p.type === "end") {
+      page.classList.add("page-end");
+      page.innerHTML =
+        '<div class="end-inner">' +
+          '<div class="end-photo-wrap">' +
+            '<div class="end-photo-ring">' +
+              '<img src="' + p.img + '" alt="" ' +
+                'onerror="this.style.opacity=\'0\';this.style.display=\'none\';">' +
+            '</div>' +
+          '</div>' +
+          '<h1 class="end-big">' + p.bigTitle + '</h1>' +
+          '<div class="end-rule"></div>' +
+          '<div class="lines"></div>' +
+          '<button class="restart-btn" type="button">回到首页</button>' +
+        '</div>';
+
+    } else {
+      page.innerHTML =
+        '<div class="card">' +
+          '<div class="photo-frame">' +
+            '<div class="photo-inner">' +
+              '<div class="photo-holder"><span>' + p.alt + '</span></div>' +
+              '<img src="' + p.img + '" alt="" onerror="this.style.display=\'none\';">' +
+            '</div>' +
+          '</div>' +
+          '<div class="text-area">' +
+            '<h2 class="p-title">' + p.title + '</h2>' +
+            '<div class="lines"></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="hint">轻触继续</div>';
+    }
+
+    return page;
+  }
+
+  pages.forEach(function (p) {
+    var el = buildPage(p);
+    stage.appendChild(el);
+    pageEls.push(el);
+  });
+
+  /* =========================================================
+     4. 打字机
+     ========================================================= */
+  var typer = {
+    lines: [],
+    container: null,
+    li: -1,
+    ci: 0,
+    timer: null,
+    wait: null,
+    current: null,
+    currentText: "",
+    done: true,
+    onDone: null,
+
+    start: function (lines, container, onDone) {
+      this.stop();
+      this.lines = lines;
+      this.container = container;
+      this.onDone = onDone;
+      this.li = -1;
+      this.ci = 0;
+      this.done = false;
+      this.current = null;
+      this.currentText = "";
+      this.nextLine();
+    },
+
+    stop: function () {
+      if (this.timer) { clearInterval(this.timer); this.timer = null; }
+      if (this.wait) { clearTimeout(this.wait); this.wait = null; }
+    },
+
+    nextLine: function () {
+      var self = this;
+      this.li++;
+
+      if (this.li >= this.lines.length) {
+        this.done = true;
+        if (this.onDone) this.onDone();
+        return;
+      }
+
+      var text = this.lines[this.li];
+      this.currentText = text;
+
+      if (text === "") {
+        var blank = document.createElement("p");
+        blank.className = "line";
+        blank.innerHTML = "&nbsp;";
+        blank.style.animationDuration = ".6s";
+        this.container.appendChild(blank);
+        this.current = blank;
+        this.wait = setTimeout(function () { self.nextLine(); }, 220);
+        return;
+      }
+
+      var p = document.createElement("p");
+      p.className = "line typing";
+      this.container.appendChild(p);
+      this.current = p;
+      this.ci = 0;
+
+      this.timer = setInterval(function () {
+        self.ci++;
+        p.textContent = text.slice(0, self.ci);
+        if (self.ci >= text.length) {
+          clearInterval(self.timer);
+          self.timer = null;
+          p.classList.remove("typing");
+          self.wait = setTimeout(function () { self.nextLine(); }, 520);
+        }
+      }, 62);
+    },
+
+    finishAll: function () {
+      if (this.done || !this.lines.length) return;
+      this.stop();
+
+      if (this.current && this.currentText !== "") {
+        this.current.textContent = this.currentText;
+        this.current.classList.remove("typing");
+      }
+
+      for (var i = this.li + 1; i < this.lines.length; i++) {
+        var p = document.createElement("p");
+        p.className = "line";
+        if (this.lines[i] === "") {
+          p.innerHTML = "&nbsp;";
+        } else {
+          p.textContent = this.lines[i];
+        }
+        this.container.appendChild(p);
+      }
+
+      this.li = this.lines.length;
+      this.done = true;
+      if (this.onDone) this.onDone();
+    }
+  };
+
+  /* =========================================================
+     5. 页面切换
+     ========================================================= */
+  function revealEndButton(el) {
+    var btn = el.querySelector(".restart-btn");
+    if (btn) btn.classList.add("show");
+  }
+
+  function showPage(i) {
+    currentIndex = i;
+
+    pageEls.forEach(function (el, idx) {
+      el.classList.toggle("active", idx === i);
+    });
+
+    var p = pages[i];
+    var el = pageEls[i];
+    var linesEl = el.querySelector(".lines");
+    var hint = el.querySelector(".hint");
+
+    if (hint) hint.classList.remove("show");
+    if (startDelayTimer) { clearTimeout(startDelayTimer); startDelayTimer = null; }
+    typer.stop();
+
+    /* 进入结尾页时，先隐藏按钮，等文字打完再出现 */
+    if (p.type === "end") {
+      var rb = el.querySelector(".restart-btn");
+      if (rb) rb.classList.remove("show");
+    }
+
+    waitingForTap = false;
+
+    if (p.lines && p.lines.length && linesEl) {
+      if (el.dataset.played === "1") {
+        waitingForTap = true;
+        if (hint) hint.classList.add("show");
+        if (p.type === "end") revealEndButton(el);
+        return;
+      }
+      el.dataset.played = "1";
+
+      var delay = (p.type === "end") ? 1250 : 620;
+
+      startDelayTimer = setTimeout(function () {
+        typer.start(p.lines, linesEl, function () {
+          waitingForTap = true;
+          if (hint) hint.classList.add("show");
+          if (p.type === "end") revealEndButton(el);
+        });
+      }, delay);
+
+    } else {
+      waitingForTap = true;
+      if (hint) hint.classList.add("show");
+    }
+  }
+
+  /* 初始化：显示封面 */
+  pageEls[0].classList.add("active");
+
+  /* =========================================================
+     6. 回到首页
+     ========================================================= */
+  function goHome() {
+    typer.stop();
+    typer.lines = [];
+    typer.done = true;
+
+    if (startDelayTimer) { clearTimeout(startDelayTimer); startDelayTimer = null; }
+
+    /* 清空所有页面的播放状态与文字 */
+    pageEls.forEach(function (el) {
+      el.removeAttribute("data-played");
+      var linesEl = el.querySelector(".lines");
+      if (linesEl) linesEl.innerHTML = "";
+      var hint = el.querySelector(".hint");
+      if (hint) hint.classList.remove("show");
+      var rb = el.querySelector(".restart-btn");
+      if (rb) rb.classList.remove("show");
+    });
+
+    currentIndex = 0;
+    started = false;
+    waitingForTap = true;
+
+    /* 切回封面 */
+    pageEls.forEach(function (el, idx) {
+      el.classList.toggle("active", idx === 0);
+    });
+
+    /* 重播封面入场动画 */
+    var coverEl = pageEls[0];
+    coverEl.classList.remove("active");
+    void coverEl.offsetWidth;
+    coverEl.classList.add("active");
+  }
+
+  /* =========================================================
+     7. 交互
+     ========================================================= */
+  stage.addEventListener("click", function (e) {
+    /* 结尾页“回到首页”按钮 */
+    if (e.target.closest(".restart-btn")) {
+      e.stopPropagation();
+      goHome();
+      return;
+    }
+
+    if (!started) return;
+    if (e.target.closest(".start-btn")) return;
+
+    if (!waitingForTap) {
+      if (startDelayTimer) { clearTimeout(startDelayTimer); startDelayTimer = null; }
+      var el = pageEls[currentIndex];
+      var linesEl = el.querySelector(".lines");
+      var hint = el.querySelector(".hint");
+      var p = pages[currentIndex];
+
+      if (linesEl && el.dataset.played === "1" && !typer.lines.length) {
+        /* 延迟期间点击：整段直接显示 */
+        p.lines.forEach(function (t) {
+          var node = document.createElement("p");
+          node.className = "line";
+          if (t === "") { node.innerHTML = "&nbsp;"; } else { node.textContent = t; }
+          linesEl.appendChild(node);
+        });
+        typer.done = true;
+        typer.lines = [];
+        waitingForTap = true;
+        if (hint) hint.classList.add("show");
+        if (p.type === "end") revealEndButton(el);
+      } else {
+        typer.finishAll();
+      }
+      return;
+    }
+
+    if (currentIndex < pageEls.length - 1) {
+      showPage(currentIndex + 1);
+    }
+  });
+
+  /* 封面按钮 */
+  var startBtn = document.querySelector(".start-btn");
+  startBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    if (started) return;
+    started = true;
+
+    startMusic();
+
+    var toggle = document.getElementById("musicToggle");
+    toggle.classList.add("visible");
+
+    showPage(1);
+  });
+
+  /* =========================================================
+     8. 背景音乐（Web Audio 合成的轻柔钢琴循环）
+     ========================================================= */
+  var audioCtx = null;
+  var master = null;
+  var bus = null;
+  var delayNode = null;
+  var musicTimer = null;
+  var nextNoteTime = 0;
+  var barIndex = 0;
+  var musicOn = false;
+
+  var BPM = 62;
+  var beat = 60 / BPM;
+  var barLen = beat * 4;
+
+  var progression = [
+    { bass: 174.61, notes: [220.00, 261.63, 349.23], mel: [440.00, 523.25] },
+    { bass: 130.81, notes: [196.00, 261.63, 329.63], mel: [392.00, 523.25] },
+    { bass: 146.83, notes: [220.00, 293.66, 349.23], mel: [440.00, 349.23] },
+    { bass: 116.54, notes: [174.61, 233.08, 293.66], mel: [349.23, 440.00] }
+  ];
+
+  function initAudio() {
+    if (audioCtx) return;
+
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+
+    audioCtx = new AC();
+
+    master = audioCtx.createGain();
+    master.gain.value = 0;
+    master.connect(audioCtx.destination);
+
+    delayNode = audioCtx.createDelay(1.5);
+    delayNode.delayTime.value = 0.42;
+
+    var feedback = audioCtx.createGain();
+    feedback.gain.value = 0.3;
+
+    var wet = audioCtx.createGain();
+    wet.gain.value = 0.28;
+
+    delayNode.connect(feedback);
+    feedback.connect(delayNode);
+    delayNode.connect(wet);
+    wet.connect(master);
+
+    bus = audioCtx.createBiquadFilter();
+    bus.type = "lowpass";
+    bus.frequency.value = 2600;
+    bus.Q.value = 0.4;
+    bus.connect(master);
+    bus.connect(delayNode);
+  }
+
+  function playNote(freq, time, dur, vol) {
+    var osc1 = audioCtx.createOscillator();
+    osc1.type = "sine";
+    osc1.frequency.value = freq;
+
+    var osc2 = audioCtx.createOscillator();
+    osc2.type = "triangle";
+    osc2.frequency.value = freq * 2.002;
+
+    var g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.0001, time);
+    g.gain.exponentialRampToValueAtTime(vol, time + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+
+    var g2 = audioCtx.createGain();
+    g2.gain.value = 0.08;
+    osc2.connect(g2);
+    g2.connect(g);
+    osc1.connect(g);
+    g.connect(bus);
+
+    osc1.start(time);
+    osc2.start(time);
+    osc1.stop(time + dur + 0.06);
+    osc2.stop(time + dur + 0.06);
+  }
+
+  function scheduleBar(t, idx) {
+    var c = progression[idx % progression.length];
+
+    playNote(c.bass, t, 3.6, 0.19);
+
+    var pattern = [0, 1, 2, 1, 2, 1, 0, 1];
+    for (var i = 0; i < pattern.length; i++) {
+      playNote(c.notes[pattern[i]], t + i * (beat / 2), 1.9, 0.062);
+    }
+
+    for (var j = 0; j < c.mel.length; j++) {
+      playNote(c.mel[j], t + (1.0 + j * 1.6) * beat, 2.4, 0.05);
+    }
+  }
+
+  function scheduleAhead() {
+    if (!audioCtx) return;
+    while (nextNoteTime < audioCtx.currentTime + 1.2) {
+      scheduleBar(nextNoteTime, barIndex);
+      nextNoteTime += barLen;
+      barIndex++;
+    }
+  }
+
+  function startMusic() {
+    initAudio();
+    if (!audioCtx) return;
+
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+
+    var now = audioCtx.currentTime;
+
+    master.gain.cancelScheduledValues(now);
+    master.gain.setValueAtTime(Math.max(master.gain.value, 0.0001), now);
+    master.gain.linearRampToValueAtTime(0.55, now + 2.4);
+
+    nextNoteTime = now + 0.25;
+    barIndex = 0;
+    musicOn = true;
+
+    if (musicTimer) clearInterval(musicTimer);
+    musicTimer = setInterval(scheduleAhead, 200);
+    scheduleAhead();
+
+    updateMusicBtn();
+  }
+
+  function stopMusic() {
+    if (!audioCtx || !master) return;
+    var now = audioCtx.currentTime;
+    master.gain.cancelScheduledValues(now);
+    master.gain.setValueAtTime(master.gain.value, now);
+    master.gain.linearRampToValueAtTime(0.0001, now + 1.0);
+    musicOn = false;
+    if (musicTimer) { clearInterval(musicTimer); musicTimer = null; }
+    updateMusicBtn();
+  }
+
+  var musicToggle = document.getElementById("musicToggle");
+
+  function updateMusicBtn() {
+    musicToggle.classList.toggle("off", !musicOn);
+  }
+
+  musicToggle.addEventListener("click", function (e) {
+    e.stopPropagation();
+    if (musicOn) {
+      stopMusic();
+    } else {
+      startMusic();
+    }
+  });
+
+  document.addEventListener("visibilitychange", function () {
+    if (!audioCtx) return;
+    if (document.hidden) {
+      if (musicOn && audioCtx.state === "running") audioCtx.suspend();
+    } else {
+      if (musicOn && audioCtx.state === "suspended") audioCtx.resume();
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
