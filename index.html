@@ -127,7 +127,6 @@
                 inset 0 1px 0 rgba(255,255,255,.95);
   }
 
-  /* 封面动画只在 .active 时触发，方便“回到首页”重播 */
   .page-cover.active .cover-orn      { animation: riseIn 1s ease .15s forwards; }
   .page-cover.active .cover-title    { animation: riseIn 1.1s ease .45s forwards; }
   .page-cover.active .cover-rule     { animation: growLine 1.4s ease .85s forwards; }
@@ -141,10 +140,10 @@
     to   { opacity: 1; transform: none; }
   }
 
-  /* ============ 照片卡片 ============ */
+  /* ============ 照片卡片（照片统一 1:1） ============ */
   .card {
-    width: min(400px, 86vw);
-    max-height: 86vh;
+    width: min(360px, 84vw, 48vh);
+    max-height: 92vh;
     display: flex; flex-direction: column;
     padding: 16px 16px 22px;
     background: linear-gradient(170deg, rgba(255,253,248,.92), rgba(253,244,231,.84));
@@ -166,10 +165,12 @@
     to   { opacity: 1; transform: none; }
   }
 
+  /* 1:1 照片框 */
   .photo-frame {
-    flex: 1 1 auto;
-    min-height: 168px;
-    display: flex;
+    flex: 0 0 auto;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
     padding: 9px;
     background: #FFFDF9;
     border: 1px solid rgba(228,206,176,.7);
@@ -179,7 +180,7 @@
   }
   .photo-inner {
     position: relative;
-    flex: 1; min-height: 0;
+    width: 100%; height: 100%;
     border-radius: 7px;
     overflow: hidden;
     background: linear-gradient(140deg, #F6E7D2, #EFD7B6);
@@ -188,6 +189,7 @@
     position: absolute; inset: 0;
     width: 100%; height: 100%;
     object-fit: cover;
+    object-position: center;
     display: block;
     z-index: 2;
   }
@@ -205,10 +207,15 @@
   }
 
   .text-area {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow-y: auto;
     padding: 16px 6px 0;
     text-align: center;
+    -webkit-overflow-scrolling: touch;
   }
+  .text-area::-webkit-scrollbar { width: 0; height: 0; }
+
   .p-title {
     display: inline-block;
     font-size: 1.02rem;
@@ -257,7 +264,10 @@
     padding: 0 6vw;
     max-width: 440px;
     max-height: 94vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
+  .end-inner::-webkit-scrollbar { width: 0; height: 0; }
 
   .end-photo-wrap {
     margin-bottom: 12px;
@@ -337,14 +347,31 @@
   .end-inner .lines { margin-top: 10px; }
   .end-inner .line { font-size: .82rem; line-height: 1.98; }
 
-  /* “回到首页”按钮 */
-  .restart-btn {
+  /* 结尾页按钮组 */
+  .end-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
     margin-top: 20px;
-    padding: 11px 34px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px);
+    transition: opacity .8s ease, transform .8s ease, visibility .8s;
+    pointer-events: none;
+  }
+  .end-actions.show {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    pointer-events: auto;
+  }
+  .end-btn {
+    padding: 11px 26px;
     font-family: inherit;
-    font-size: .8rem;
-    letter-spacing: .26em;
-    text-indent: .26em;
+    font-size: .78rem;
+    letter-spacing: .22em;
+    text-indent: .22em;
     color: #7A5B3E;
     background: linear-gradient(160deg, #FFFDF8, #F7E6CC);
     border: 1px solid rgba(214,178,124,.75);
@@ -352,20 +379,28 @@
     cursor: pointer;
     box-shadow: 0 10px 24px -14px rgba(160,120,64,.85),
                 inset 0 1px 0 rgba(255,255,255,.95);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(8px);
-    transition: opacity .8s ease, transform .8s ease, visibility .8s;
-    pointer-events: none;
+    transition: transform .22s ease, box-shadow .22s ease;
   }
-  .restart-btn.show {
-    opacity: 1;
-    visibility: visible;
-    transform: none;
-    pointer-events: auto;
+  .end-btn:active {
+    transform: scale(.95);
   }
-  .restart-btn:active {
-    transform: scale(.96);
+  .end-btn.primary {
+    color: #8A5E2A;
+    background: linear-gradient(160deg, #FFF6E2, #F5D9A8);
+    border-color: rgba(206,160,92,.9);
+  }
+  .end-actions.show .end-btn.primary {
+    animation: eggPulse 2.4s ease-in-out 1.4s infinite;
+  }
+  @keyframes eggPulse {
+    0%, 100% {
+      box-shadow: 0 10px 24px -14px rgba(160,120,64,.85),
+                  inset 0 1px 0 rgba(255,255,255,.95);
+    }
+    50% {
+      box-shadow: 0 10px 32px -8px rgba(224,168,88,.95),
+                  inset 0 1px 0 rgba(255,255,255,.95);
+    }
   }
 
   /* ============ 提示 ============ */
@@ -421,6 +456,70 @@
     0%,100% { transform: translateY(0) scale(1); }
     50%     { transform: translateY(-2px) scale(1.08); }
   }
+
+  /* ============ 视频彩蛋弹层 ============ */
+  #videoModal {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4vw;
+    background: rgba(42, 29, 18, .82);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .45s ease, visibility .45s;
+  }
+  #videoModal.open {
+    opacity: 1;
+    visibility: visible;
+  }
+  .video-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 220px;
+    min-height: 130px;
+    max-width: 92vw;
+    max-height: 84vh;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #000;
+    box-shadow: 0 30px 80px -20px rgba(0,0,0,.8);
+    transform: scale(.94);
+    transition: transform .45s cubic-bezier(.22,.61,.36,1);
+  }
+  #videoModal.open .video-box { transform: none; }
+  .video-box video {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 92vw;
+    max-height: 84vh;
+    background: #000;
+  }
+  .video-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 3;
+    width: 34px; height: 34px;
+    display: flex; align-items: center; justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255,253,248,.9);
+    color: #6B4F3A;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0,0,0,.35);
+    transition: transform .2s ease;
+  }
+  .video-close:active { transform: scale(.9); }
 </style>
 </head>
 <body>
@@ -434,13 +533,31 @@
   <span class="off-note">♪</span>
 </button>
 
+<!-- ============================================================
+     背景音乐：把你自己的 mp3 放到 music/bgm.mp3
+     也可以直接改下面的 src 路径
+     ============================================================ -->
+<audio id="bgm" loop preload="auto" src="music/bgm.mp3"></audio>
+
+<!-- ============================================================
+     彩蛋视频弹层：把你的视频放到 videos/easter-egg.mp4
+     也可以直接改下面的 src 路径
+     ============================================================ -->
+<div id="videoModal">
+  <div class="video-box">
+    <button class="video-close" type="button" aria-label="关闭">×</button>
+    <video id="eggVideo" src="videos/easter-egg.mp4"
+           controls playsinline preload="metadata"></video>
+  </div>
+</div>
+
 <script>
 (function () {
   "use strict";
 
   /* =========================================================
      1. 内容配置 —— 15 张照片 + 结尾第 16 张
-     照片路径：photos/01.jpg ~ photos/16.jpg
+     照片路径：photos/01.jpg ~ photos/16.jpg（全部按 1:1 裁切展示）
      ========================================================= */
   var pages = [
     /* 0 封面 */
@@ -523,7 +640,7 @@
       ] },
 
     /* 10 科创 */
-    { img: "photos/10.jpg", alt: "第 10 张 · 科创集团 · 那一年", title: "科创一年",
+    { img: "photos/10.jpg", alt: "第 10 张 · 科创集团 · 那一年", title: "工作第一年",
       lines: [
         "工作第一年，你忙过也拼过。",
         "新环境、新节奏，你一点点扛过。",
@@ -573,7 +690,7 @@
       lines: [
         "29 岁，不是告别青春，",
         "是把故事写得更认真。",
-        "珠海的风、悉尼的夜、脚下的路、发改局的灯，",
+        "珠海的风、悉尼的夜、脚下的路、单位的灯，",
         "都成了你身上的光。",
         "过去有人爱你，现在他们还在，",
         "未来我们并肩，慢慢走。"
@@ -591,13 +708,13 @@
         "有未来可奔赴，",
         "也有我，陪你走接下来的每一步。",
         "",
-        "生日快乐。",
+        "生日快乐！",
         "从这一岁开始，我们并肩，慢慢走。"
       ] }
   ];
 
   /* =========================================================
-     2. 花瓣 —— 数量更多，更浪漫
+     2. 花瓣
      ========================================================= */
   (function createPetals() {
     var layer = document.getElementById("petals");
@@ -676,7 +793,10 @@
           '<h1 class="end-big">' + p.bigTitle + '</h1>' +
           '<div class="end-rule"></div>' +
           '<div class="lines"></div>' +
-          '<button class="restart-btn" type="button">回到首页</button>' +
+          '<div class="end-actions">' +
+            '<button class="end-btn primary egg-btn" type="button">观看彩蛋</button>' +
+            '<button class="end-btn restart-btn" type="button">回到首页</button>' +
+          '</div>' +
         '</div>';
 
     } else {
@@ -809,9 +929,9 @@
   /* =========================================================
      5. 页面切换
      ========================================================= */
-  function revealEndButton(el) {
-    var btn = el.querySelector(".restart-btn");
-    if (btn) btn.classList.add("show");
+  function revealEndActions(el) {
+    var box = el.querySelector(".end-actions");
+    if (box) box.classList.add("show");
   }
 
   function showPage(i) {
@@ -830,10 +950,9 @@
     if (startDelayTimer) { clearTimeout(startDelayTimer); startDelayTimer = null; }
     typer.stop();
 
-    /* 进入结尾页时，先隐藏按钮，等文字打完再出现 */
     if (p.type === "end") {
-      var rb = el.querySelector(".restart-btn");
-      if (rb) rb.classList.remove("show");
+      var box = el.querySelector(".end-actions");
+      if (box) box.classList.remove("show");
     }
 
     waitingForTap = false;
@@ -842,7 +961,7 @@
       if (el.dataset.played === "1") {
         waitingForTap = true;
         if (hint) hint.classList.add("show");
-        if (p.type === "end") revealEndButton(el);
+        if (p.type === "end") revealEndActions(el);
         return;
       }
       el.dataset.played = "1";
@@ -853,7 +972,7 @@
         typer.start(p.lines, linesEl, function () {
           waitingForTap = true;
           if (hint) hint.classList.add("show");
-          if (p.type === "end") revealEndButton(el);
+          if (p.type === "end") revealEndActions(el);
         });
       }, delay);
 
@@ -870,33 +989,32 @@
      6. 回到首页
      ========================================================= */
   function goHome() {
+    closeVideo();
+
     typer.stop();
     typer.lines = [];
     typer.done = true;
 
     if (startDelayTimer) { clearTimeout(startDelayTimer); startDelayTimer = null; }
 
-    /* 清空所有页面的播放状态与文字 */
     pageEls.forEach(function (el) {
       el.removeAttribute("data-played");
       var linesEl = el.querySelector(".lines");
       if (linesEl) linesEl.innerHTML = "";
       var hint = el.querySelector(".hint");
       if (hint) hint.classList.remove("show");
-      var rb = el.querySelector(".restart-btn");
-      if (rb) rb.classList.remove("show");
+      var box = el.querySelector(".end-actions");
+      if (box) box.classList.remove("show");
     });
 
     currentIndex = 0;
     started = false;
     waitingForTap = true;
 
-    /* 切回封面 */
     pageEls.forEach(function (el, idx) {
       el.classList.toggle("active", idx === 0);
     });
 
-    /* 重播封面入场动画 */
     var coverEl = pageEls[0];
     coverEl.classList.remove("active");
     void coverEl.offsetWidth;
@@ -907,7 +1025,14 @@
      7. 交互
      ========================================================= */
   stage.addEventListener("click", function (e) {
-    /* 结尾页“回到首页”按钮 */
+    /* 观看彩蛋 */
+    if (e.target.closest(".egg-btn")) {
+      e.stopPropagation();
+      openVideo();
+      return;
+    }
+
+    /* 回到首页 */
     if (e.target.closest(".restart-btn")) {
       e.stopPropagation();
       goHome();
@@ -925,7 +1050,6 @@
       var p = pages[currentIndex];
 
       if (linesEl && el.dataset.played === "1" && !typer.lines.length) {
-        /* 延迟期间点击：整段直接显示 */
         p.lines.forEach(function (t) {
           var node = document.createElement("p");
           node.className = "line";
@@ -936,7 +1060,7 @@
         typer.lines = [];
         waitingForTap = true;
         if (hint) hint.classList.add("show");
-        if (p.type === "end") revealEndButton(el);
+        if (p.type === "end") revealEndActions(el);
       } else {
         typer.finishAll();
       }
@@ -964,153 +1088,96 @@
   });
 
   /* =========================================================
-     8. 背景音乐（Web Audio 合成的轻柔钢琴循环）
+     8. 背景音乐（你自己的 mp3）
      ========================================================= */
-  var audioCtx = null;
-  var master = null;
-  var bus = null;
-  var delayNode = null;
-  var musicTimer = null;
-  var nextNoteTime = 0;
-  var barIndex = 0;
-  var musicOn = false;
-
-  var BPM = 62;
-  var beat = 60 / BPM;
-  var barLen = beat * 4;
-
-  var progression = [
-    { bass: 174.61, notes: [220.00, 261.63, 349.23], mel: [440.00, 523.25] },
-    { bass: 130.81, notes: [196.00, 261.63, 329.63], mel: [392.00, 523.25] },
-    { bass: 146.83, notes: [220.00, 293.66, 349.23], mel: [440.00, 349.23] },
-    { bass: 116.54, notes: [174.61, 233.08, 293.66], mel: [349.23, 440.00] }
-  ];
-
-  function initAudio() {
-    if (audioCtx) return;
-
-    var AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
-
-    audioCtx = new AC();
-
-    master = audioCtx.createGain();
-    master.gain.value = 0;
-    master.connect(audioCtx.destination);
-
-    delayNode = audioCtx.createDelay(1.5);
-    delayNode.delayTime.value = 0.42;
-
-    var feedback = audioCtx.createGain();
-    feedback.gain.value = 0.3;
-
-    var wet = audioCtx.createGain();
-    wet.gain.value = 0.28;
-
-    delayNode.connect(feedback);
-    feedback.connect(delayNode);
-    delayNode.connect(wet);
-    wet.connect(master);
-
-    bus = audioCtx.createBiquadFilter();
-    bus.type = "lowpass";
-    bus.frequency.value = 2600;
-    bus.Q.value = 0.4;
-    bus.connect(master);
-    bus.connect(delayNode);
-  }
-
-  function playNote(freq, time, dur, vol) {
-    var osc1 = audioCtx.createOscillator();
-    osc1.type = "sine";
-    osc1.frequency.value = freq;
-
-    var osc2 = audioCtx.createOscillator();
-    osc2.type = "triangle";
-    osc2.frequency.value = freq * 2.002;
-
-    var g = audioCtx.createGain();
-    g.gain.setValueAtTime(0.0001, time);
-    g.gain.exponentialRampToValueAtTime(vol, time + 0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001, time + dur);
-
-    var g2 = audioCtx.createGain();
-    g2.gain.value = 0.08;
-    osc2.connect(g2);
-    g2.connect(g);
-    osc1.connect(g);
-    g.connect(bus);
-
-    osc1.start(time);
-    osc2.start(time);
-    osc1.stop(time + dur + 0.06);
-    osc2.stop(time + dur + 0.06);
-  }
-
-  function scheduleBar(t, idx) {
-    var c = progression[idx % progression.length];
-
-    playNote(c.bass, t, 3.6, 0.19);
-
-    var pattern = [0, 1, 2, 1, 2, 1, 0, 1];
-    for (var i = 0; i < pattern.length; i++) {
-      playNote(c.notes[pattern[i]], t + i * (beat / 2), 1.9, 0.062);
-    }
-
-    for (var j = 0; j < c.mel.length; j++) {
-      playNote(c.mel[j], t + (1.0 + j * 1.6) * beat, 2.4, 0.05);
-    }
-  }
-
-  function scheduleAhead() {
-    if (!audioCtx) return;
-    while (nextNoteTime < audioCtx.currentTime + 1.2) {
-      scheduleBar(nextNoteTime, barIndex);
-      nextNoteTime += barLen;
-      barIndex++;
-    }
-  }
-
-  function startMusic() {
-    initAudio();
-    if (!audioCtx) return;
-
-    if (audioCtx.state === "suspended") {
-      audioCtx.resume();
-    }
-
-    var now = audioCtx.currentTime;
-
-    master.gain.cancelScheduledValues(now);
-    master.gain.setValueAtTime(Math.max(master.gain.value, 0.0001), now);
-    master.gain.linearRampToValueAtTime(0.55, now + 2.4);
-
-    nextNoteTime = now + 0.25;
-    barIndex = 0;
-    musicOn = true;
-
-    if (musicTimer) clearInterval(musicTimer);
-    musicTimer = setInterval(scheduleAhead, 200);
-    scheduleAhead();
-
-    updateMusicBtn();
-  }
-
-  function stopMusic() {
-    if (!audioCtx || !master) return;
-    var now = audioCtx.currentTime;
-    master.gain.cancelScheduledValues(now);
-    master.gain.setValueAtTime(master.gain.value, now);
-    master.gain.linearRampToValueAtTime(0.0001, now + 1.0);
-    musicOn = false;
-    if (musicTimer) { clearInterval(musicTimer); musicTimer = null; }
-    updateMusicBtn();
-  }
-
+  var bgm = document.getElementById("bgm");
   var musicToggle = document.getElementById("musicToggle");
+  var musicOn = false;
+  var fadeRaf = null;
+  var TARGET_VOL = 0.55;
+
+  if (bgm) {
+    bgm.volume = 0;
+  }
+
+  function fadeVolume(to, dur, cb) {
+    if (!bgm) { if (cb) cb(); return; }
+    var from = bgm.volume;
+    var startTime = (typeof performance !== "undefined" && performance.now)
+      ? performance.now() : Date.now();
+
+    if (fadeRaf) {
+      if (typeof cancelAnimationFrame === "function") cancelAnimationFrame(fadeRaf);
+      else clearTimeout(fadeRaf);
+      fadeRaf = null;
+    }
+
+    function step() {
+      var now = (typeof performance !== "undefined" && performance.now)
+        ? performance.now() : Date.now();
+      var t = Math.min((now - startTime) / dur, 1);
+      var v = from + (to - from) * t;
+      bgm.volume = Math.max(0, Math.min(1, v));
+
+      if (t < 1) {
+        if (typeof requestAnimationFrame === "function") {
+          fadeRaf = requestAnimationFrame(step);
+        } else {
+          fadeRaf = setTimeout(step, 16);
+        }
+      } else {
+        fadeRaf = null;
+        if (cb) cb();
+      }
+    }
+
+    if (typeof requestAnimationFrame === "function") {
+      fadeRaf = requestAnimationFrame(step);
+    } else {
+      fadeRaf = setTimeout(step, 16);
+    }
+  }
 
   function updateMusicBtn() {
     musicToggle.classList.toggle("off", !musicOn);
+  }
+
+  function startMusic() {
+    if (!bgm) return;
+    var p = bgm.play();
+    if (p && typeof p.then === "function") {
+      p.then(function () {
+        musicOn = true;
+        updateMusicBtn();
+        fadeVolume(TARGET_VOL, 2400);
+      }).catch(function () {
+        musicOn = false;
+        updateMusicBtn();
+      });
+    } else {
+      musicOn = true;
+      updateMusicBtn();
+      fadeVolume(TARGET_VOL, 2400);
+    }
+  }
+
+  function stopMusic() {
+    if (!bgm) return;
+    musicOn = false;
+    updateMusicBtn();
+    fadeVolume(0, 700, function () {
+      if (bgm) bgm.pause();
+    });
+  }
+
+  function duckMusic() {
+    if (!bgm || !musicOn) return;
+    fadeVolume(0, 500);
+  }
+
+  function unduckMusic() {
+    if (!bgm || !musicOn) return;
+    fadeVolume(TARGET_VOL, 900);
   }
 
   musicToggle.addEventListener("click", function (e) {
@@ -1122,13 +1189,73 @@
     }
   });
 
+  /* 页面切到后台时暂停，回来再恢复 */
   document.addEventListener("visibilitychange", function () {
-    if (!audioCtx) return;
+    if (!bgm) return;
     if (document.hidden) {
-      if (musicOn && audioCtx.state === "running") audioCtx.suspend();
+      if (musicOn && !bgm.paused) bgm.pause();
     } else {
-      if (musicOn && audioCtx.state === "suspended") audioCtx.resume();
+      if (musicOn && bgm.paused) {
+        var p = bgm.play();
+        if (p && p.catch) p.catch(function () {});
+      }
     }
+  });
+
+  /* =========================================================
+     9. 彩蛋视频
+     ========================================================= */
+  var videoModal = document.getElementById("videoModal");
+  var eggVideo = document.getElementById("eggVideo");
+  var videoClose = videoModal ? videoModal.querySelector(".video-close") : null;
+
+  function openVideo() {
+    if (!videoModal) return;
+    videoModal.classList.add("open");
+    duckMusic();
+
+    if (eggVideo) {
+      try { eggVideo.currentTime = 0; } catch (err) {}
+      var p = eggVideo.play();
+      if (p && typeof p.catch === "function") p.catch(function () {});
+    }
+  }
+
+  function closeVideo() {
+    if (!videoModal) return;
+    if (!videoModal.classList.contains("open")) return;
+
+    videoModal.classList.remove("open");
+
+    if (eggVideo) {
+      try { eggVideo.pause(); } catch (err) {}
+      try { eggVideo.currentTime = 0; } catch (err) {}
+    }
+
+    unduckMusic();
+  }
+
+  if (videoClose) {
+    videoClose.addEventListener("click", function (e) {
+      e.stopPropagation();
+      closeVideo();
+    });
+  }
+
+  if (videoModal) {
+    videoModal.addEventListener("click", function (e) {
+      if (e.target === videoModal) closeVideo();
+    });
+  }
+
+  if (eggVideo) {
+    eggVideo.addEventListener("ended", function () {
+      closeVideo();
+    });
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closeVideo();
   });
 
 })();
